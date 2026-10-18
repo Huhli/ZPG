@@ -131,6 +131,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Apllication.cpp" />
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DrawableObject.cpp" />
     <ClCompile Include="Glad.cpp" />
     <ClCompile Include="main.cpp" />
@@ -142,16 +143,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="clock.h" />
     <ClInclude Include="DrawableObject.h" />
+    <ClInclude Include="earth.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="moon.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="shaders\tree.h" />
     <ClInclude Include="sphere.h" />
+    <ClInclude Include="sun.h" />
     <ClInclude Include="Transformation.h" />
     <ClInclude Include="tree.h" />
     <ClInclude Include="triangle.h" />
+    <ClInclude Include="val0527.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\basic.frag" />

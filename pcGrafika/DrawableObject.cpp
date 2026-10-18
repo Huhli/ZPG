@@ -1,6 +1,5 @@
 #include "DrawableObject.h"
 
-
 DrawableObject::DrawableObject(
     Model* model,
     ShaderProgram* shaderProgram
@@ -10,27 +9,16 @@ DrawableObject::DrawableObject(
     this->shaderProgram = shaderProgram;
 }
 
-
 void DrawableObject::draw()
 {
     shaderProgram->use();
 
-    shaderProgram->setUniform(
-        "translation",
-        transformation.getX(),
-        transformation.getY(),
-        transformation.getZ()
-    );
+    const glm::mat4 modelMatrix =
+        assignedTransformation != nullptr
+        ? assignedTransformation->getMatrix()
+        : transformation.getMatrix();
 
-    shaderProgram->setUniform(
-        "scale",
-        transformation.getScale()
-    );
-
-    shaderProgram->setUniform(
-        "rotationY",
-        transformation.getRotationY()
-    );
+    shaderProgram->setUniform("modelMatrix", modelMatrix);
 
     model->draw();
 }
@@ -38,4 +26,11 @@ void DrawableObject::draw()
 Transformation& DrawableObject::getTransformation()
 {
     return transformation;
+}
+
+void DrawableObject::setTransformation(
+    CompositeTransformation* transformation
+)
+{
+    assignedTransformation = transformation;
 }

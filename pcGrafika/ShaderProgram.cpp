@@ -3,6 +3,8 @@
 #include <iostream>
 #include <cstdlib>
 
+#include <glm/gtc/type_ptr.hpp>
+
 
 ShaderProgram::ShaderProgram(
     const char* vertexShaderFile,
@@ -142,4 +144,41 @@ void ShaderProgram::setUniform(
 GLuint ShaderProgram::getId() const
 {
     return id;
+}
+
+
+void ShaderProgram::setUniform(
+    const char* name,
+    const glm::mat4& value
+)
+{
+    GLint location =
+        glGetUniformLocation(id, name);
+
+    if (location == -1)
+    {
+        std::cout
+            << "Uniform variable not found: "
+            << name
+            << std::endl;
+
+        return;
+    }
+
+    glUniformMatrix4fv(
+        location,
+        1,
+        GL_FALSE,
+        glm::value_ptr(value)
+    );
+}
+
+void ShaderProgram::setUniform(const char* name, bool value)
+{
+    GLint location = glGetUniformLocation(id, name);
+
+    if (location != -1)
+    {
+        glUniform1i(location, value ? 1 : 0);
+    }
 }

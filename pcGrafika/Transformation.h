@@ -1,8 +1,18 @@
-#pragma once
 
 #pragma once
 
-class Transformation
+#include <glm/glm.hpp>
+#include <vector>
+
+class TransformationComponent
+{
+public:
+    virtual ~TransformationComponent() = default;
+
+    virtual glm::mat4 getMatrix() const = 0;
+};
+
+class Transformation : public TransformationComponent
 {
 public:
     Transformation();
@@ -10,19 +20,24 @@ public:
     void translate(float x, float y, float z);
     void scaleBy(float value);
     void rotateY(float angle);
+    void rotateZ(float angle);
 
-    float getX() const;
-    float getY() const;
-    float getZ() const;
-
-    float getScale() const;
-    float getRotationY() const;
+    glm::mat4 getMatrix() const override;
 
 private:
-    float x;
-    float y;
-    float z;
+    glm::mat4 matrix;
+};
 
-    float scale;
-    float rotationY;
+class CompositeTransformation : public TransformationComponent
+{
+public:
+    CompositeTransformation();
+
+    void add(TransformationComponent* transformation);
+    void clear();
+
+    glm::mat4 getMatrix() const override;
+
+private:
+    std::vector<TransformationComponent*> transformations;
 };

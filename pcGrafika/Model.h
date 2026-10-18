@@ -1,3 +1,4 @@
+
 #pragma once
 
 #include <glad/gl.h>
@@ -9,7 +10,9 @@ public:
         const float* vertices,
         int size,
         int vertexCount,
-        bool hasNormal
+        bool hasNormal,
+        bool hasColor = false,
+        bool normalBeforeColor = false
     );
 
     ~Model();
@@ -21,6 +24,6 @@ public:
 private:
     GLuint vao;
     GLuint vbo;
-
     int vertexCount;
+    bool hasColor;
 };

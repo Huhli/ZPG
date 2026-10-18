@@ -16,10 +16,12 @@ public:
 
     Transformation& getTransformation();
 
+    void setTransformation(CompositeTransformation* transformation);
+
 private:
     Transformation transformation;
+    CompositeTransformation* assignedTransformation = nullptr;
 
     Model* model;
-
     ShaderProgram* shaderProgram;
 };

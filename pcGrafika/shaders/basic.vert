@@ -1,35 +1,68 @@
+
 #version 330 core
 
 layout(location = 0) in vec3 position;
-layout(location = 1) in vec3 normal;
+layout(location = 1) in vec3 attribute1;
+layout(location = 2) in vec3 attribute2;
 
-uniform vec3 translation;
-uniform float scale;
-uniform float rotationY;
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+
+uniform bool useTreeColors;
+uniform bool useVertexColor;
+uniform bool useGroundColor;
 
 out vec3 vertexNormal;
+out vec3 vertexColor;
 
 void main()
 {
-    vec3 pos = position;
+    gl_Position = projectionMatrix
+                * viewMatrix
+                * modelMatrix
+                * vec4(position, 1.0);
 
-    // Scale
-    pos *= scale;
+    if (useVertexColor)
+    {
+        // Use colors stored in the model.
+        vertexColor = attribute1;
+        vertexNormal = attribute2;
+    }
+    else
+    {
+        vertexNormal = attribute1;
 
-    // Rotation around Y axis
-    float c = cos(rotationY);
-    float s = sin(rotationY);
+        if (useGroundColor)
+        {
+            // Green forest ground.
+            vertexColor = vec3(0.12, 0.30, 0.08);
+        }
+        else if (useTreeColors)
+        {
+            if (gl_VertexID < 36443)
+            {
+                // Brown trunk and branches.
+                vertexColor = vec3(0.30, 0.16, 0.07);
+            }
+            else
+            {
+                // Natural green foliage with subtle variation.
+                float variation = 0.92
+                    + 0.08 * sin(
+                        position.x * 83.0
+                        + position.y * 57.0
+                        + position.z * 71.0
+                    );
 
-    float x = c * pos.x + s * pos.z;
-    float y = pos.y;
-    float z = -s * pos.x + c * pos.z;
-
-    pos = vec3(x, y, z);
-
-    // Translation
-    pos += translation;
-
-    gl_Position = vec4(pos, 1.0);
-
-    vertexNormal = normal;
+                vertexColor = vec3(0.12, 0.42, 0.08)
+                            * variation;
+            }
+        }
+        else
+        {
+            // Default color.
+            vertexColor = vec3(1.0);
+        }
+    }
 }

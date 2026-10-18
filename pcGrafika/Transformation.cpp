@@ -1,67 +1,77 @@
+
 #include "Transformation.h"
 
+#include <glm/gtc/matrix_transform.hpp>
 
 Transformation::Transformation()
+    : matrix(1.0f)
 {
-    x = 0.0f;
-    y = 0.0f;
-    z = 0.0f;
-
-    scale = 1.0f;
-
-    rotationY = 0.0f;
 }
 
-
-void Transformation::translate(
-    float x,
-    float y,
-    float z
-)
+void Transformation::translate(float x, float y, float z)
 {
-    this->x += x;
-    this->y += y;
-    this->z += z;
+    matrix = glm::translate(
+        glm::mat4(1.0f),
+        glm::vec3(x, y, z)
+    ) * matrix;
 }
-
 
 void Transformation::scaleBy(float value)
 {
-    scale *= value;
+    matrix = glm::scale(
+        glm::mat4(1.0f),
+        glm::vec3(value, value, value)
+    ) * matrix;
 }
-
 
 void Transformation::rotateY(float angle)
 {
-    rotationY += angle;
+    matrix = glm::rotate(
+        glm::mat4(1.0f),
+        angle,
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    ) * matrix;
 }
 
-
-float Transformation::getX() const
+void Transformation::rotateZ(float angle)
 {
-    return x;
+    matrix = glm::rotate(
+        glm::mat4(1.0f),
+        angle,
+        glm::vec3(0.0f, 0.0f, 1.0f)
+    ) * matrix;
 }
 
-
-float Transformation::getY() const
+glm::mat4 Transformation::getMatrix() const
 {
-    return y;
+    return matrix;
 }
 
-
-float Transformation::getZ() const
+CompositeTransformation::CompositeTransformation()
 {
-    return z;
 }
 
-
-float Transformation::getScale() const
+void CompositeTransformation::add(TransformationComponent* transformation)
 {
-    return scale;
+    if (transformation != nullptr)
+    {
+        transformations.push_back(transformation);
+    }
 }
 
-
-float Transformation::getRotationY() const
+void CompositeTransformation::clear()
 {
-    return rotationY;
+    transformations.clear();
+}
+
+glm::mat4 CompositeTransformation::getMatrix() const
+{
+    glm::mat4 result(1.0f);
+
+    for (const auto* transformation : transformations)
+    {
+        result = transformation->getMatrix() * result;
+    }
+
+    return result;
 }
