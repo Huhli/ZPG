@@ -1,4 +1,3 @@
-
 #include "Transformation.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -8,9 +7,9 @@ Transformation::Transformation()
 {
 }
 
-void Transformation::translate(float x, float y, float z)
+void Transformation::scaleBy(float x, float y, float z)
 {
-    matrix = glm::translate(
+    matrix = glm::scale(
         glm::mat4(1.0f),
         glm::vec3(x, y, z)
     ) * matrix;
@@ -74,4 +73,12 @@ glm::mat4 CompositeTransformation::getMatrix() const
     }
 
     return result;
+}
+
+void Transformation::translate(float x, float y, float z)
+{
+    matrix = glm::translate(
+        glm::mat4(1.0f),
+        glm::vec3(x, y, z)
+    ) * matrix;
 }

@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <glm/glm.hpp>
@@ -18,7 +17,13 @@ public:
     Transformation();
 
     void translate(float x, float y, float z);
+
+    // Rovnomìrné škálování
     void scaleBy(float value);
+
+    // Nerovnomìrné škálování
+    void scaleBy(float x, float y, float z);
+
     void rotateY(float angle);
     void rotateZ(float angle);
 

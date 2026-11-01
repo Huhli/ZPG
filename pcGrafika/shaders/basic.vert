@@ -13,19 +13,57 @@ uniform bool useTreeColors;
 uniform bool useVertexColor;
 uniform bool useGroundColor;
 
+uniform float hourHandAngle;
+uniform float minuteHandAngle;
+uniform float secondHandAngle;
+
+// Vertex ranges for the three hands.
+uniform int hourHandStart;
+uniform int minuteHandStart;
+uniform int secondHandStart;
+
 out vec3 vertexNormal;
 out vec3 vertexColor;
 
 void main()
 {
-    gl_Position = projectionMatrix
-                * viewMatrix
-                * modelMatrix
-                * vec4(position, 1.0);
+    vec3 adjustedPosition = position;
 
     if (useVertexColor)
     {
-        // Use colors stored in the model.
+        int id = gl_VertexID;
+
+        float angle = 0.0;
+        bool isHand = false;
+
+        if (id >= hourHandStart && id < hourHandStart + 6)
+        {
+            angle = hourHandAngle;
+            isHand = true;
+        }
+        else if (id >= minuteHandStart && id < minuteHandStart + 6)
+        {
+            angle = minuteHandAngle;
+            isHand = true;
+        }
+        else if (id >= secondHandStart && id < secondHandStart + 6)
+        {
+            angle = secondHandAngle;
+            isHand = true;
+        }
+
+        if (isHand)
+        {
+            // Rotate the hand around its base at the clock center.
+            float c = cos(angle);
+            float s = sin(angle);
+
+            adjustedPosition.xy = vec2(
+                c * position.x - s * position.y,
+                s * position.x + c * position.y
+            );
+        }
+
         vertexColor = attribute1;
         vertexNormal = attribute2;
     }
@@ -35,19 +73,16 @@ void main()
 
         if (useGroundColor)
         {
-            // Green forest ground.
             vertexColor = vec3(0.12, 0.30, 0.08);
         }
         else if (useTreeColors)
         {
             if (gl_VertexID < 36443)
             {
-                // Brown trunk and branches.
                 vertexColor = vec3(0.30, 0.16, 0.07);
             }
             else
             {
-                // Natural green foliage with subtle variation.
                 float variation = 0.92
                     + 0.08 * sin(
                         position.x * 83.0
@@ -61,8 +96,12 @@ void main()
         }
         else
         {
-            // Default color.
             vertexColor = vec3(1.0);
         }
     }
+
+    gl_Position = projectionMatrix
+                * viewMatrix
+                * modelMatrix
+                * vec4(adjustedPosition, 1.0);
 }

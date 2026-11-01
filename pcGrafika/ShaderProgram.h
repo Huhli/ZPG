@@ -38,7 +38,7 @@ public:
 
     GLuint getId() const;
 
-    void setUniform(const char* name, bool value);
+    void setUniform(const char* name, int value);
 
 private:
     GLuint id;

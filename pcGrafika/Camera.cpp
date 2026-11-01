@@ -73,4 +73,7 @@ void Camera::rotate(float deltaX, float deltaY)
 
     updateTarget();
 }
-
+glm::vec3 Camera::getPosition() const
+{
+    return eye;
+}

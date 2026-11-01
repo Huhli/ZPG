@@ -1,4 +1,4 @@
-#include "Scene.h"
+﻿#include "Scene.h"
 
 #include "sphere.h"
 #include "triangle.h"
@@ -12,6 +12,8 @@
 #include <chrono>
 #include <cmath>
 #include <vector>
+#include <iterator>
+#include "Calipso.h"
 
 
 Scene::Scene(int sceneNumber)
@@ -34,6 +36,57 @@ Scene::Scene(int sceneNumber)
             "square.frag"
         );
 
+    solarPhongShader = new ShaderProgram(
+        "lighting_solar.vert",
+        "phong_solar.frag"
+    );
+
+    sunShader = new ShaderProgram(
+        "lighting_solar.vert",
+        "sun_solar.frag"
+    );
+
+    // CALIPSO data is position + normal, so its normal is attribute 1.
+    calipsoShader = new ShaderProgram(
+        "lighting.vert",
+        "calipso.frag"
+    );
+
+
+    // =========================
+    // LIGHTING SHADERS
+    // =========================
+
+    ambientShader = new ShaderProgram(
+        "lighting.vert",
+        "ambient.frag"
+    );
+
+    lambertShader = new ShaderProgram(
+        "lighting.vert",
+        "lambert.frag"
+    );
+
+    phongShader = new ShaderProgram(
+        "lighting.vert",
+        "phong.frag"
+    );
+
+    blinnPhongShader = new ShaderProgram(
+        "lighting.vert",
+        "blinn_phong.frag"
+    );
+
+    nightShader = new ShaderProgram(
+        "lighting.vert",
+        "night.frag"
+    );
+
+    fireflyShader = new ShaderProgram(
+        "lighting.vert",
+        "firefly.frag"
+    );
+
 
     // =========================
     // INITIALIZE POINTERS
@@ -53,10 +106,13 @@ Scene::Scene(int sceneNumber)
     sunModel = nullptr;
     earthModel = nullptr;
     moonModel = nullptr;
+    calipsoModel = nullptr;
 
     sunObject = nullptr;
     earthObject = nullptr;
     moonObject = nullptr;
+    calipsoObject = nullptr;
+
 
 
     // =========================
@@ -92,13 +148,14 @@ Scene::Scene(int sceneNumber)
     // SPHERE
     // =========================
 
-    sphereModel =
-        new Model(
-            sphere,
-            sizeof(sphere),
-            2880,
-            true
-        );
+    sphereModel = new Model(
+        sphere,
+        sizeof(sphere),
+        2880,
+        true,   // hasNormal
+        false,  // hasColor
+        false   // normalBeforeColor
+    );
 
     sphereObject =
         new DrawableObject(
@@ -153,7 +210,7 @@ Scene::Scene(int sceneNumber)
         0.0f
     );
 
-    if (sceneNumber == 2)
+    if (sceneNumber == 2 || sceneNumber == 3)
     {
         const glm::vec3 logoColor(
             20.0f / 255.0f,
@@ -234,29 +291,6 @@ Scene::Scene(int sceneNumber)
             }
         }
 
-        // Create the model after filtering and changing colors.
-        clockModel = new Model(
-            filteredClock.data(),
-            static_cast<int>(filteredClock.size() * sizeof(float)),
-            static_cast<int>(filteredClock.size() / floatsPerVertex),
-            true,
-            true,
-            true
-        );
-
-        clockObject = new DrawableObject(
-            clockModel,
-            shaderProgram1
-        );
-
-        clockObject->getTransformation().scaleBy(0.8f);
-  
-
-        // =========================
-// CLOCK HANDS
-// =========================
-
-// Hour hand: short and wide.
         const float hourHandVertices[] = {
             // Position             Normal          Color
             -0.0175f, 0.0f, -0.07f,  0, 0, -1,      0.08f, 0.08f, 0.08f,
@@ -290,55 +324,73 @@ Scene::Scene(int sceneNumber)
             -0.004f, 0.70f, -0.08f, 0, 0, -1,      0.85f, 0.05f, 0.05f
         };
 
-        // Create the hand models.
-        hourHandModel = new Model(
-            hourHandVertices,
-            sizeof(hourHandVertices),
-            6,
+        // Remember where each hand starts in the combined vertex data.
+        hourHandStart = static_cast<int>(
+            filteredClock.size() / floatsPerVertex
+            );
+
+        filteredClock.insert(
+            filteredClock.end(),
+            std::begin(hourHandVertices),
+            std::end(hourHandVertices)
+        );
+
+        minuteHandStart = static_cast<int>(
+            filteredClock.size() / floatsPerVertex
+            );
+
+        filteredClock.insert(
+            filteredClock.end(),
+            std::begin(minuteHandVertices),
+            std::end(minuteHandVertices)
+        );
+
+        secondHandStart = static_cast<int>(
+            filteredClock.size() / floatsPerVertex
+            );
+
+        filteredClock.insert(
+            filteredClock.end(),
+            std::begin(secondHandVertices),
+            std::end(secondHandVertices)
+        );
+
+        // Create one model containing the clock face and all three hands.
+        clockModel = new Model(
+            filteredClock.data(),
+            static_cast<int>(filteredClock.size() * sizeof(float)),
+            static_cast<int>(filteredClock.size() / floatsPerVertex),
             true,
             true,
             true
         );
 
-        minuteHandModel = new Model(
-            minuteHandVertices,
-            sizeof(minuteHandVertices),
-            6,
-            true,
-            true,
-            true
-        );
+        if (sceneNumber == 2)
+        {
+            clockObject = new DrawableObject(clockModel, shaderProgram1);
+            clockObject->getTransformation().scaleBy(0.8f);
+        }
+        else if (sceneNumber == 3)
+        {
+            // Create two forest clock objects that share the same model.
+            forestClockObject1 = new DrawableObject(clockModel, shaderProgram1);
+            forestClockObject1->getTransformation().scaleBy(-0.45f);
+            forestClockObject1->getTransformation().rotateZ(glm::pi<float>());
+            forestClockObject1->getTransformation().translate(-5.0f, 2.0f, -7.0f);
 
-        secondHandModel = new Model(
-            secondHandVertices,
-            sizeof(secondHandVertices),
-            6,
-            true,
-            true,
-            true
-        );
-
-        // Create the drawable objects.
-        hourHandObject = new DrawableObject(hourHandModel, shaderProgram1);
-        minuteHandObject = new DrawableObject(minuteHandModel, shaderProgram1);
-        secondHandObject = new DrawableObject(secondHandModel, shaderProgram1);
-
-        // Connect the rotations to the composite transformations.
-        hourHandCombined.add(&hourHandRotation);
-        minuteHandCombined.add(&minuteHandRotation);
-        secondHandCombined.add(&secondHandRotation);
-
-        hourHandObject->setTransformation(&hourHandCombined);
-        minuteHandObject->setTransformation(&minuteHandCombined);
-        secondHandObject->setTransformation(&secondHandCombined);
+            forestClockObject2 = new DrawableObject(clockModel, shaderProgram1);
+            forestClockObject2->getTransformation().scaleBy(-0.45f);
+            forestClockObject2->getTransformation().rotateZ(glm::pi<float>());
+            forestClockObject2->getTransformation().translate(5.0f, 2.0f, -15.0f);
+        }
     }
 
 
-      // =========================
-      // FOREST
-      // =========================
+    // =========================
+    // FOREST
+    // =========================
 
-    if (sceneNumber == 3)
+    if (sceneNumber == 3 || sceneNumber == 4)
     {
         // =========================
         // FOREST GROUND
@@ -364,7 +416,7 @@ Scene::Scene(int sceneNumber)
 
         groundObject = new DrawableObject(
             groundModel,
-            shaderProgram1
+            sceneNumber == 4 ? nightShader : shaderProgram1
         );
 
 
@@ -392,7 +444,7 @@ Scene::Scene(int sceneNumber)
         {
             DrawableObject* treeObject = new DrawableObject(
                 treeModel,
-                shaderProgram1
+                sceneNumber == 4 ? nightShader : shaderProgram1
             );
 
             // Random position in the 3D forest.
@@ -427,42 +479,162 @@ Scene::Scene(int sceneNumber)
         }
     }
 
-      // =========================
-      // SOLAR SYSTEM
-      // =========================
+    if (sceneNumber == 4)
+    {
+        fireflyObject = new DrawableObject(
+            sphereModel,
+            fireflyShader
+        );
 
-      if (sceneNumber == 5)
-      {
-          sunModel = new Model(sun, sizeof(sun), 11520, true, true);
-          earthModel = new Model(earth, sizeof(earth), 11520, true, true);
-          moonModel = new Model(moon, sizeof(moon), 11520, true, true);
+        fireflyObject->getTransformation().scaleBy(0.07f);
+        fireflyObject->getTransformation().translate(
+            0.0f, 1.5f, -3.0f
+        );
+    }
 
-          sunObject = new DrawableObject(sunModel, shaderProgram1);
-          earthObject = new DrawableObject(earthModel, shaderProgram1);
-          moonObject = new DrawableObject(moonModel, shaderProgram1);
+    // =========================
+    // SOLAR SYSTEM
+    // =========================
 
-          // Scale the Sun.
-          sunObject->getTransformation().scaleBy(0.25f);
 
-          // Prepare the Earth's orbit around the Sun.
-          earthScale.scaleBy(0.13f);
-          earthOrbit.translate(0.65f, 0.0f, 0.0f);
+    if (sceneNumber == 5)
+    {
+        // =========================================
+        // MODELY
+        // =========================================
 
-          earthCombined.add(&earthScale);
-          earthCombined.add(&earthOrbit);
-          earthObject->setTransformation(&earthCombined);
+        sunModel = new Model(
+            sun, sizeof(sun), 11520, true, true
+        );
 
-          // Prepare the Moon's orbit around the Earth.
-          moonScale.scaleBy(0.07f);
-          moonOrbit.translate(0.25f, 0.0f, 0.0f);
+        earthModel = new Model(
+            earth, sizeof(earth), 11520, true, true
+        );
 
-          moonCombined.add(&moonScale);
-          moonCombined.add(&moonOrbit);
-          moonCombined.add(&earthOrbit);
+        moonModel = new Model(
+            moon, sizeof(moon), 11520, true, true
+        );
 
-          moonObject->setTransformation(&moonCombined);
-      
-      }
+        calipsoModel = new Model(
+            calipso,
+            sizeof(calipso),
+            calipsoVertexCount,
+            true,
+            false,
+            false
+        );
+
+        // =========================================
+        // OBJEKTY A SHADERY
+        // =========================================
+
+        sunObject = new DrawableObject(
+            sunModel, sunShader
+        );
+
+        earthObject = new DrawableObject(
+            earthModel, solarPhongShader
+        );
+
+        moonObject = new DrawableObject(
+            moonModel, solarPhongShader
+        );
+
+        calipsoObject = new DrawableObject(
+            calipsoModel, calipsoShader
+        );
+
+        // =========================================
+        // SLUNCE
+        // =========================================
+
+        sunObject->getTransformation().scaleBy(0.32f);
+
+        // =========================================
+        // ZEMĚ
+        // =========================================
+
+        earthScale.scaleBy(0.17f);
+
+        // Vzdálenost Země od Slunce.
+        earthOrbit.translate(0.95f, 0.0f, 0.0f);
+
+        earthCombined.add(&earthScale);
+        earthCombined.add(&earthRotation);
+        earthCombined.add(&earthOrbit);
+
+        earthObject->setTransformation(&earthCombined);
+
+        // =========================================
+        // MĚSÍC
+        // =========================================
+
+        moonScale.scaleBy(0.09f);
+
+        // Vzdálenost Měsíce od Země.
+        moonOrbit.translate(0.30f, 0.0f, 0.0f);
+
+        moonCombined.add(&moonScale);
+        moonCombined.add(&moonOrbit);
+        moonCombined.add(&earthOrbit);
+
+        moonObject->setTransformation(&moonCombined);
+
+        // =========================================
+        // DRUŽICE CALIPSO
+        // =========================================
+
+        // Zvětšené měřítko pro lepší viditelnost.
+        calipsoScale.scaleBy(0.12f);
+
+        // Poloměr oběžné dráhy kolem Země.
+        calipsoOffset.translate(0.32f, 0.0f, 0.0f);
+
+        // Naklonění oběžné roviny o 35 stupňů.
+        calipsoInclination.rotateZ(
+            glm::radians(35.0f)
+        );
+
+        calipsoCombined.add(&calipsoScale);
+        calipsoCombined.add(&calipsoOffset);
+        calipsoCombined.add(&calipsoOrbit);
+        calipsoCombined.add(&calipsoInclination);
+        calipsoCombined.add(&earthOrbit);
+
+        calipsoObject->setTransformation(&calipsoCombined);
+    }
+
+
+    if (sceneNumber == 6)
+    {
+        ambientSphere = new DrawableObject(
+            sphereModel, ambientShader
+        );
+
+        lambertSphere = new DrawableObject(
+            sphereModel, lambertShader
+        );
+
+        phongSphere = new DrawableObject(
+            sphereModel, phongShader
+        );
+
+        blinnPhongSphere = new DrawableObject(
+            sphereModel, blinnPhongShader
+        );
+
+        ambientSphere->getTransformation().scaleBy(0.35f);
+        ambientSphere->getTransformation().translate(-1.3f, 0.7f, 0.0f);
+
+        lambertSphere->getTransformation().scaleBy(0.35f);
+        lambertSphere->getTransformation().translate(1.3f, 0.7f, 0.0f);
+
+        phongSphere->getTransformation().scaleBy(0.35f, 0.18f, 0.35f);
+        phongSphere->getTransformation().translate(-1.3f, -0.7f, 0.0f);
+
+        blinnPhongSphere->getTransformation().scaleBy(0.35f);
+        blinnPhongSphere->getTransformation().translate(1.3f, -0.7f, 0.0f);
+    }
 }
 
 
@@ -491,6 +663,7 @@ Scene::~Scene()
     delete sunObject;
     delete earthObject;
     delete moonObject;
+    delete calipsoObject;
 
     // =========================
     // DELETE MODELS
@@ -504,6 +677,7 @@ Scene::~Scene()
     delete sunModel;
     delete earthModel;
     delete moonModel;
+    delete calipsoModel;
 
 
     // =========================
@@ -513,19 +687,25 @@ Scene::~Scene()
     delete shaderProgram1;
     delete shaderProgram2;
 
+    delete ambientShader;
+    delete lambertShader;
+    delete phongShader;
+    delete blinnPhongShader;
+    delete solarPhongShader;
+    delete calipsoShader;
+
     delete groundObject;
     delete groundModel;
 
     delete clockObject;
+    delete forestClockObject1;
+    delete forestClockObject2;
     delete clockModel;
+    delete sunShader;
 
-    delete hourHandObject;
-    delete minuteHandObject;
-    delete secondHandObject;
-
-    delete hourHandModel;
-    delete minuteHandModel;
-    delete secondHandModel;
+    delete fireflyObject;
+    delete nightShader;
+    delete fireflyShader;
 }
 
 
@@ -597,22 +777,18 @@ void Scene::draw()
             -seconds * twoPi / 60.0
             );
 
-        // Reset each transformation before applying the new angle.
-        hourHandRotation = Transformation();
-        minuteHandRotation = Transformation();
-        secondHandRotation = Transformation();
+        // Set the hand vertex ranges before drawing the combined clock model.
+        shaderProgram1->setUniform("hourHandStart", hourHandStart);
+        shaderProgram1->setUniform("minuteHandStart", minuteHandStart);
+        shaderProgram1->setUniform("secondHandStart", secondHandStart);
 
-        hourHandRotation.rotateZ(hourAngle);
-        minuteHandRotation.rotateZ(minuteAngle);
-        secondHandRotation.rotateZ(secondAngle);
+        // Set the hand angles used by the vertex shader.
+        shaderProgram1->setUniform("hourHandAngle", hourAngle);
+        shaderProgram1->setUniform("minuteHandAngle", minuteAngle);
+        shaderProgram1->setUniform("secondHandAngle", secondAngle);
 
-        // Draw the clock face first.
+        // Draw the combined clock model.
         clockObject->draw();
-
-        // Draw the hands independently.
-        hourHandObject->draw();
-        minuteHandObject->draw();
-        secondHandObject->draw();
 
         signatureLoginObject->draw();
 
@@ -663,6 +839,41 @@ void Scene::draw()
             treeObject->draw();
         }
 
+        // Calculate the current time for both forest clocks.
+        const auto now = std::chrono::system_clock::now();
+        const std::time_t currentTime =
+            std::chrono::system_clock::to_time_t(now);
+        std::tm localTime{};
+        localtime_s(&localTime, &currentTime);
+
+        const auto milliseconds =
+            std::chrono::duration_cast<std::chrono::milliseconds>(
+                now.time_since_epoch()
+            ).count() % 1000;
+        const double seconds = localTime.tm_sec + milliseconds / 1000.0;
+        const double minutes = localTime.tm_min + seconds / 60.0;
+        const double hours = (localTime.tm_hour % 12) + minutes / 60.0;
+        const double twoPi = 2.0 * std::acos(-1.0);
+
+        const float hourAngle = static_cast<float>(-hours * twoPi / 12.0);
+        const float minuteAngle = static_cast<float>(-minutes * twoPi / 60.0);
+        const float secondAngle = static_cast<float>(-seconds * twoPi / 60.0);
+
+        shaderProgram1->setUniform("hourHandStart", hourHandStart);
+        shaderProgram1->setUniform("minuteHandStart", minuteHandStart);
+        shaderProgram1->setUniform("secondHandStart", secondHandStart);
+        shaderProgram1->setUniform("hourHandAngle", hourAngle);
+        shaderProgram1->setUniform("minuteHandAngle", minuteAngle);
+        shaderProgram1->setUniform("secondHandAngle", secondAngle);
+
+        // Draw both clocks using the shared combined model.
+        shaderProgram1->setUniform("useTreeColors", false);
+        shaderProgram1->setUniform("useGroundColor", false);
+        if (forestClockObject1 != nullptr)
+            forestClockObject1->draw();
+        if (forestClockObject2 != nullptr)
+            forestClockObject2->draw();
+
         // Return to the default color mode for the signature.
         shaderProgram1->setUniform("useTreeColors", false);
         shaderProgram1->setUniform("useGroundColor", false);
@@ -673,19 +884,373 @@ void Scene::draw()
     }
 
     case 4:
-        loginObject->getTransformation().rotateY(0.01f);
-        loginObject->draw();
-        break;
+    {
+        int width = 1;
+        int height = 1;
 
-    case 5:
-        earthOrbit.rotateY(0.006f);
-        moonOrbit.rotateY(0.025f);
+        GLFWwindow* window = glfwGetCurrentContext();
 
-        sunObject->draw();
-        earthObject->draw();
-        moonObject->draw();
+        if (window != nullptr)
+            glfwGetFramebufferSize(window, &width, &height);
+
+        if (width <= 0) width = 1;
+        if (height <= 0) height = 1;
+
+        glViewport(0, 0, width, height);
+
+        glm::mat4 viewMatrix = camera.getViewMatrix();
+
+        glm::mat4 projectionMatrix = camera.getProjectionMatrix(
+            static_cast<float>(width) / static_cast<float>(height)
+        );
+
+        glm::vec3 cameraPosition = camera.getPosition();
+
+        // =====================================
+        // NOČNÍ LES – BODOVÉ OSVĚTLENÍ
+        // =====================================
+
+        nightShader->use();
+
+        nightShader->setUniform("viewMatrix", viewMatrix);
+        nightShader->setUniform("projectionMatrix", projectionMatrix);
+
+        // =====================================
+        // POHYB SVĚTLUŠKY
+        // =====================================
+
+        static float fireflyAngle = 0.0f;
+
+        // Rychlost pohybu světlušky
+        fireflyAngle += 0.01f;
+
+        // Kruhová dráha kolem středu lesa
+        float fireflyX = -3.0f * sin(fireflyAngle);
+        float fireflyY = 1.5f;
+        float fireflyZ = -3.0f * cos(fireflyAngle);
+
+        // Pohyb samotného modelu světlušky
+        fireflyObject->getTransformation().rotateY(0.01f);
+
+        // Aktualizace pozice bodového světla
+        nightShader->setUniform(
+            "lightPosition",
+            fireflyX,
+            fireflyY,
+            fireflyZ
+        );
+
+        // Barva světla – teplá žlutá
+        nightShader->setUniform(
+            "lightColor", 1.0f, 0.8f, 0.25f
+        );
+
+        nightShader->setUniform(
+            "viewPosition",
+            cameraPosition.x,
+            cameraPosition.y,
+            cameraPosition.z
+        );
+
+        // Útlum světla podle vzdálenosti
+        nightShader->setUniform("constantAttenuation", 1.0f);
+        nightShader->setUniform("linearAttenuation", 0.09f);
+        nightShader->setUniform("quadraticAttenuation", 0.032f);
+
+        // Zem
+        nightShader->setUniform(
+            "objectColor", 0.12f, 0.16f, 0.08f
+        );
+
+        if (groundObject != nullptr)
+            groundObject->draw();
+
+        // Stromy
+        nightShader->setUniform(
+            "objectColor", 0.12f, 0.30f, 0.10f
+        );
+
+        for (DrawableObject* treeObject : trees)
+        {
+            treeObject->draw();
+        }
+
+        // =====================================
+        // SVĚTLUŠKA
+        // =====================================
+
+        fireflyShader->use();
+
+        fireflyShader->setUniform("viewMatrix", viewMatrix);
+        fireflyShader->setUniform("projectionMatrix", projectionMatrix);
+
+        fireflyShader->setUniform(
+            "objectColor", 1.0f, 0.85f, 0.1f
+        );
+
+        if (fireflyObject != nullptr)
+            fireflyObject->draw();
+
         break;
     }
+
+
+    case 5:
+    {
+        int width = 1;
+        int height = 1;
+
+        GLFWwindow* window = glfwGetCurrentContext();
+
+        if (window != nullptr)
+            glfwGetFramebufferSize(window, &width, &height);
+
+        if (width <= 0) width = 1;
+        if (height <= 0) height = 1;
+
+        glViewport(0, 0, width, height);
+
+        // Kamera ovládaná stejně jako v lese.
+        const glm::mat4 viewMatrix =
+            camera.getViewMatrix();
+
+        const glm::mat4 projectionMatrix =
+            camera.getProjectionMatrix(
+                static_cast<float>(width) /
+                static_cast<float>(height)
+            );
+
+        const glm::vec3 cameraPosition =
+            camera.getPosition();
+
+        // =========================================
+        // ANIMACE
+        // =========================================
+
+        sunObject->getTransformation().rotateY(0.003f);
+
+        earthRotation.rotateY(0.02f);
+        earthOrbit.rotateY(0.006f);
+
+        moonOrbit.rotateY(0.025f);
+        calipsoOrbit.rotateY(0.035f);
+
+        // =========================================
+        // SLUNCE
+        // =========================================
+
+        sunShader->use();
+
+        sunShader->setUniform(
+            "viewMatrix", viewMatrix
+        );
+
+        sunShader->setUniform(
+            "projectionMatrix", projectionMatrix
+        );
+
+        sunObject->draw();
+
+        // =========================================
+        // ZEMĚ A MĚSÍC
+        // =========================================
+
+        solarPhongShader->use();
+
+        solarPhongShader->setUniform(
+            "viewMatrix", viewMatrix
+        );
+
+        solarPhongShader->setUniform(
+            "projectionMatrix", projectionMatrix
+        );
+
+        // Světlo ve středu Slunce.
+        solarPhongShader->setUniform(
+            "lightPosition", 0.0f, 0.0f, 0.0f
+        );
+
+        solarPhongShader->setUniform(
+            "lightColor", 1.0f, 0.88f, 0.68f
+        );
+
+        solarPhongShader->setUniform(
+            "viewPosition",
+            cameraPosition.x,
+            cameraPosition.y,
+            cameraPosition.z
+        );
+
+        // Země.
+        solarPhongShader->setUniform(
+            "objectColor", 1.0f, 1.0f, 1.0f
+        );
+
+        earthObject->draw();
+
+        // Měsíc.
+        solarPhongShader->setUniform(
+            "objectColor", 1.0f, 1.0f, 1.0f
+        );
+
+        moonObject->draw();
+
+        // =========================================
+        // CALIPSO
+        // =========================================
+
+        // POZOR: CALIPSO používá vlastní calipsoShader.
+        calipsoShader->use();
+
+
+        calipsoShader->setUniform(
+            "viewMatrix", viewMatrix
+        );
+
+        calipsoShader->setUniform(
+            "projectionMatrix", projectionMatrix
+        );
+
+        calipsoShader->setUniform(
+            "lightPosition", 0.0f, 0.0f, 0.0f
+        );
+
+        calipsoShader->setUniform(
+            "lightColor", 1.0f, 0.95f, 0.75f
+        );
+
+        calipsoShader->setUniform(
+            "viewPosition",
+            cameraPosition.x,
+            cameraPosition.y,
+            cameraPosition.z
+        );
+
+        calipsoShader->setUniform(
+            "objectColor", 1.0f, 0.85f, 0.25f
+        );
+
+        calipsoObject->draw();
+
+        break;
+    }
+
+    case 6:
+    {
+        bool badViewport = false;
+
+        int width = 1;
+        int height = 1;
+
+        GLFWwindow* window = glfwGetCurrentContext();
+
+        if (window != nullptr) {
+            glfwGetFramebufferSize(window, &width, &height);
+        }
+
+        if (width <= 0) width = 1;
+        if (height <= 0) height = 1;
+
+        if (badViewport)
+        {
+            // Záměrně špatný viewport – používá původní rozměry.
+            glViewport(0, 0, 800, 600);
+        }
+        else
+        {
+            // Správný viewport podle aktuální velikosti okna.
+            glViewport(0, 0, width, height);
+        }
+
+        glm::mat4 viewMatrix = glm::lookAt(
+            glm::vec3(0.0f, 0.0f, 4.0f),
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
+
+        glm::mat4 projectionMatrix;
+
+        if (badViewport)
+        {
+            // CHYBNĚ – poměr stran je vždy 1:1.
+            projectionMatrix = glm::perspective(
+                glm::radians(45.0f),
+                1.0f,
+                0.1f,
+                100.0f
+            );
+        }
+        else
+        {
+            // SPRÁVNĚ – poměr stran odpovídá oknu.
+            projectionMatrix = glm::perspective(
+                glm::radians(45.0f),
+                static_cast<float>(width) / static_cast<float>(height),
+                0.1f,
+                100.0f
+            );
+        }
+
+        // Ambient
+        ambientShader->use();
+        ambientShader->setUniform("normalMode", 2);
+        ambientShader->setUniform("viewMatrix", viewMatrix);
+        ambientShader->setUniform("projectionMatrix", projectionMatrix);
+        ambientShader->setUniform(
+            "objectColor", 1.0f, 0.8f, 0.1f
+        );
+        ambientSphere->draw();
+
+        // Lambert - chybná transformace normál
+        lambertShader->use();
+        lambertShader->setUniform("normalMode", 1);
+        lambertShader->setUniform("viewMatrix", viewMatrix);
+        lambertShader->setUniform("projectionMatrix", projectionMatrix);
+        lambertShader->setUniform(
+            "objectColor", 0.2f, 0.5f, 1.0f
+        );
+        lambertShader->setUniform(
+            "lightPosition", 0.0f, 0.0f, 0.0f
+        );
+        lambertSphere->draw();
+
+        // Phong - správná transformace normál
+        phongShader->use();
+        phongShader->setUniform("normalMode", 2);
+        phongShader->setUniform("viewMatrix", viewMatrix);
+        phongShader->setUniform("projectionMatrix", projectionMatrix);
+        phongShader->setUniform(
+            "objectColor", 1.0f, 0.2f, 0.2f
+        );
+        phongShader->setUniform(
+            "lightPosition", 0.0f, 0.0f, 0.0f
+        );
+        phongShader->setUniform(
+            "viewPosition", 0.0f, 0.0f, 4.0f
+        );
+        phongShader->setUniform("shininess", 1.0f);
+        phongSphere->draw();
+
+        // Blinn-Phong - správná transformace normál
+        blinnPhongShader->use();
+        blinnPhongShader->setUniform("normalMode", 2);
+        blinnPhongShader->setUniform("viewMatrix", viewMatrix);
+        blinnPhongShader->setUniform("projectionMatrix", projectionMatrix);
+        blinnPhongShader->setUniform(
+            "objectColor", 0.2f, 1.0f, 0.3f
+        );
+        blinnPhongShader->setUniform(
+            "lightPosition", 0.0f, 0.0f, 0.0f
+        );
+        blinnPhongShader->setUniform(
+            "viewPosition", 0.0f, 0.0f, 4.0f
+        );
+        blinnPhongSphere->draw();
+
+        break;
+    }
+    }
+
 
 }
 

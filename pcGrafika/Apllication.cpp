@@ -92,6 +92,7 @@ void Application::initialization()
     scenes.push_back(new Scene(3));
     scenes.push_back(new Scene(4));
     scenes.push_back(new Scene(5));
+    scenes.push_back(new Scene(6));
 
     activeScene = 1;
 }
@@ -132,6 +133,9 @@ void Application::run()
         if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS)
             activeScene = 5;
 
+        if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS)
+            activeScene = 6;
+
         // Read the current mouse position.
         double mouseX;
         double mouseY;
@@ -143,10 +147,10 @@ void Application::run()
                 GLFW_MOUSE_BUTTON_RIGHT
             ) == GLFW_PRESS;
 
-        // Control the camera only in scene 3.
-        if (activeScene == 3)
+        // Ovládání kamery v lese (scéna 3) a solární soustavì (scéna 5).
+        if (activeScene == 3 || activeScene == 5 || activeScene == 4)
         {
-            Camera& camera = scenes[2]->getCamera();
+            Camera& camera = scenes[activeScene - 1]->getCamera();
 
             const float speed = 3.0f * deltaTime;
 

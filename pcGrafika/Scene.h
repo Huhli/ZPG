@@ -1,12 +1,12 @@
 #pragma once
 
 #include <vector>
+#include <memory>
 
 #include "DrawableObject.h"
 #include "Model.h"
 #include "ShaderProgram.h"
 #include "Transformation.h"
-#include <memory>
 #include "sun.h"
 #include "earth.h"
 #include "moon.h"
@@ -27,6 +27,21 @@ private:
     ShaderProgram* shaderProgram1;
     ShaderProgram* shaderProgram2;
 
+
+    ShaderProgram* ambientShader = nullptr;
+    ShaderProgram* lambertShader = nullptr;
+    ShaderProgram* phongShader = nullptr;
+    ShaderProgram* blinnPhongShader = nullptr;
+    ShaderProgram* solarPhongShader = nullptr;
+    ShaderProgram* calipsoShader = nullptr;
+    ShaderProgram* sunShader = nullptr;
+
+    DrawableObject* ambientSphere = nullptr;
+    DrawableObject* lambertSphere = nullptr;
+    DrawableObject* phongSphere = nullptr;
+    DrawableObject* blinnPhongSphere = nullptr;
+
+
     Model* triangleModel;
     Model* sphereModel;
     Model* treeModel;
@@ -38,7 +53,7 @@ private:
     DrawableObject* loginObject;
     DrawableObject* signatureLoginObject;
 
-    // Transformations for the triangle
+    // Transformations for the triangle.
     Transformation triangleMove;
     Transformation triangleRotation;
     CompositeTransformation triangleCombined;
@@ -47,51 +62,54 @@ private:
     std::vector<std::unique_ptr<Transformation>> treeTransformations;
     std::vector<std::unique_ptr<CompositeTransformation>> treeComposites;
 
-    // Solar system models
+    // Solar system models.
     Model* sunModel;
     Model* earthModel;
     Model* moonModel;
+    Model* calipsoModel = nullptr;
 
-    // Solar system objects
+    // Solar system objects.
     DrawableObject* sunObject;
     DrawableObject* earthObject;
     DrawableObject* moonObject;
+    DrawableObject* calipsoObject = nullptr;
 
-    // Solar system transformations
+    // Solar system transformations.
     Transformation earthOrbit;
     Transformation earthScale;
     Transformation moonOrbit;
     Transformation moonScale;
+    Transformation calipsoScale;
+    Transformation calipsoOffset;
+    Transformation calipsoOrbit;
+    Transformation calipsoInclination;
+
+    Transformation sunRotation;
+    Transformation earthRotation;
 
     CompositeTransformation earthOrbitCombined;
     CompositeTransformation earthCombined;
     CompositeTransformation moonCombined;
+    CompositeTransformation calipsoCombined;
 
     Camera camera;
 
     Model* groundModel = nullptr;
     DrawableObject* groundObject = nullptr;
 
+    // One combined clock model, reused in both scenes.
     Model* clockModel = nullptr;
     DrawableObject* clockObject = nullptr;
+    DrawableObject* forestClockObject1 = nullptr;
+    DrawableObject* forestClockObject2 = nullptr;
 
-    Model* hourHandModel = nullptr;
-    Model* minuteHandModel = nullptr;
-    Model* secondHandModel = nullptr;
+    // Vertex indices of the hands in the combined clock model.
+    int hourHandStart = 0;
+    int minuteHandStart = 0;
+    int secondHandStart = 0;
 
-    DrawableObject* hourHandObject = nullptr;
-    DrawableObject* minuteHandObject = nullptr;
-    DrawableObject* secondHandObject = nullptr;
-
-    Transformation hourHandRotation;
-    Transformation minuteHandRotation;
-    Transformation secondHandRotation;
-
-    double previousHourAngle = 0.0;
-    double previousMinuteAngle = 0.0;
-    double previousSecondAngle = 0.0;
-
-    CompositeTransformation hourHandCombined;
-    CompositeTransformation minuteHandCombined;
-    CompositeTransformation secondHandCombined;
+    ShaderProgram* nightShader = nullptr;
+    ShaderProgram* fireflyShader = nullptr;
+    DrawableObject* fireflyObject = nullptr;
+    Transformation fireflyMovement;
 };

@@ -173,12 +173,12 @@ void ShaderProgram::setUniform(
     );
 }
 
-void ShaderProgram::setUniform(const char* name, bool value)
+void ShaderProgram::setUniform(const char* name, int value)
 {
     GLint location = glGetUniformLocation(id, name);
 
     if (location != -1)
     {
-        glUniform1i(location, value ? 1 : 0);
+        glUniform1i(location, value);
     }
 }

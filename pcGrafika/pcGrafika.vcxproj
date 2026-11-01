@@ -143,6 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h" />
+    <ClInclude Include="Calipso.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="clock.h" />
     <ClInclude Include="DrawableObject.h" />
@@ -161,10 +162,21 @@
     <ClInclude Include="val0527.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="ambient.frag" />
+    <None Include="blinn_phong.frag" />
+    <None Include="calipso.frag" />
+    <None Include="firefly.frag" />
+    <None Include="lambert.frag" />
+    <None Include="lighting.vert" />
+    <None Include="lighting_solar.vert" />
+    <None Include="night.frag" />
+    <None Include="phong.frag" />
+    <None Include="phong_solar.frag" />
     <None Include="shaders\basic.frag" />
     <None Include="shaders\basic.vert" />
     <None Include="square.frag" />
     <None Include="square.vert" />
+    <None Include="sun_solar.frag" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

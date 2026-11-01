@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Zdrojové soubory\shaders">
+      <UniqueIdentifier>{01cab023-f22b-4756-9300-2cce009ef684}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -98,11 +101,47 @@
     <ClInclude Include="clock.h">
       <Filter>Hlavičkové soubory</Filter>
     </ClInclude>
+    <ClInclude Include="Calipso.h">
+      <Filter>Hlavičkové soubory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\basic.frag" />
     <None Include="shaders\basic.vert" />
     <None Include="square.vert" />
     <None Include="square.frag" />
+    <None Include="ambient.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="lighting.vert">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="lambert.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="phong.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="blinn_phong.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="lighting_solar.vert">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="phong_solar.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="sun_solar.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="calipso.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="night.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
+    <None Include="firefly.frag">
+      <Filter>Zdrojové soubory\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
